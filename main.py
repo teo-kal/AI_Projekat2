@@ -4,15 +4,16 @@ from gtts import gTTS
 from datetime import datetime 
 import speech_recognition as sr
 import win32com.client as wincl
-#import os 
+import os 
 import subprocess
-import time
+from pathlib import Path
+#import time
 
 def openProgram(speak, programs):
     speak.Speak("Here's a list of programs. Which one would you like to open?")
 
     for key in programs.keys():
-        print("> " + key)
+        print("  > " + key)
 
     audio = r.listen(source)
     recognizedAudio = str.lower(r.recognize_google(audio))
@@ -65,6 +66,74 @@ def dateAndTime(speak):
     speak.Speak("The date is: " + day + " of " + monthAndYear)
     speak.Speak("The current time is: " + hour + mins + ampm)
 
+
+def closeProgram(speak):
+    speak.Speak("Which program would you like to close?")
+    print("Which program would you like to close?")
+    print("NOTE: You have to specify the process name (Ex: 'chrome')")
+
+    audio = r.listen(source)
+    ans = str.lower(r.recognize_google(audio))
+
+    os.system("taskkill /f /im " + ans + ".exe")
+
+
+def createMemo(speak):
+    print("I'll write a .txt file for you. What would you like to name it?")
+    speak.Speak("I'll write a .t x t file for you. What would you like to name it?")
+
+    audio = r.listen(source)
+    ans = str.lower(r.recognize_google(audio))
+   
+    print("You said: " + ans)
+    #speak("You said: " + str(ans))     #Puca -_-
+
+    if os.path.exists("./memos/" + ans + ".txt"):
+        print("A file with this name already exists. Do you want to repeat your input? (yes/no)")
+        speak.Speak("A file with this name already exists. Do you want to repeat your input?")
+    else:
+        print("Do you want to repeat your input? (yes/no)")
+        speak.Speak("Do you want to repeat your input?")
+
+    audio = r.listen(source)
+    confirmation = str.lower(r.recognize_google(audio))
+
+    while "no" not in confirmation:
+        print("What would you like to name the file?")
+        speak.Speak("What would you like to name the file?")
+
+        audio = r.listen(source)
+        ans = str.lower(r.recognize_google(audio))
+
+        print("You said: " + ans)
+
+        if os.path.exists("./memos/" + ans + ".txt"):
+            print("A file with this name already exists. Do you want to repeat your input? (yes/no)")
+            speak.Speak("A file with this name already exists. Do you want to repeat your input?")
+        else:
+            print("Do you want to repeat your input? (yes/no)")
+            speak.Speak("Do you want to repeat your input?")
+
+        audio = r.listen(source)
+        confirmation = str.lower(r.recognize_google(audio))
+
+    speak.Speak("BEGIN MEMO:")
+
+    audio = r.listen(source)
+    text = str.lower(r.recognize_google(audio))
+
+    try:
+        Path("./memos").mkdir(parents=True, exist_ok=True)  #NOTE: stavila sam ./memos/ u .gitignore
+        
+        with open("./memos/" + ans + ".txt", 'w') as f:
+            f.write(text)
+
+    except Exception as e:
+        print("Error: " + e)
+
+    print("Done. The file is in the memos folder.")
+    speak.Speak("Done. The file is in the memos folder.")
+
 ######MAIN###########
 r = sr.Recognizer()
 speak = wincl.Dispatch("SAPI.SpVoice")
@@ -75,11 +144,13 @@ programs = {
     "notepad": 'C:\\Windows\\System32\\notepad.exe'
 }
 
+commandList = ["Show Commands", "Open Program", "Create Memo", "Google", "Date and Time"]
+
 commands = {
-    "commands": ["Show Commands", "Open Program", "Memo", "Reminder", "Google", "Date and Time"],
     "Open Program": openProgram,
-    "Date and Time": dateAndTime#,
-    #"Memo": memo
+    "Date and Time": dateAndTime,
+    "Close Program": closeProgram,
+    "Create Memo": createMemo
 }
 
 with sr.Microphone() as source:
@@ -89,7 +160,7 @@ with sr.Microphone() as source:
 
     audio = r.listen(source)
 
-    recognizedAudio = r.recognize_google(audio)
+    recognizedAudio = str.lower(r.recognize_google(audio))
 
     while("stop" not in recognizedAudio):
 
@@ -97,12 +168,13 @@ with sr.Microphone() as source:
             print("You said: " + recognizedAudio)
 
             if("hello" in recognizedAudio):
-                #print("HI BACK!")
-                #output = gTTS(text="Hello to you too!", lang = "en", slow = False)
-                speak.Speak("Hello World")
+                speak.Speak("Hello!")
 
-            if("list" in recognizedAudio):
-                for command in commands["commands"]:
+            if("how are you" in recognizedAudio):
+                speak.Speak("I'm fine, thank you.")
+
+            if("list" in recognizedAudio or "commands" in recognizedAudio):
+                for command in commandList:
                     print("  > " + command)
 
             if("open program" in recognizedAudio):
@@ -110,6 +182,12 @@ with sr.Microphone() as source:
 
             if("date" in recognizedAudio or "time" in recognizedAudio):
                 commands["Date and Time"](speak)
+
+            if("close program" in recognizedAudio):
+                commands["Close Program"](speak)
+
+            if("memo" in recognizedAudio):
+                commands["Create Memo"](speak)
                 
 
         except Exception as e:
