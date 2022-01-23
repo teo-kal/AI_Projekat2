@@ -71,15 +71,15 @@ speak = wincl.Dispatch("SAPI.SpVoice")
 
 programs = {
     "chrome": ('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', '-new-tab'),
-    "firefox": ('C:\\Program Files\\Mozilla Firefox\\firefox.exe', 'www.google.com'),
+    "firefox": ('C:\\Program Files\\Mozilla Firefox\\firefox.exe', '-new-tab'),
     "notepad": 'C:\\Windows\\System32\\notepad.exe'
 }
 
 commands = {
     "commands": ["Show Commands", "Open Program", "Memo", "Reminder", "Google", "Date and Time"],
     "Open Program": openProgram,
-    "Date and Time": dateAndTime,
-    "Memo": memo
+    "Date and Time": dateAndTime#,
+    #"Memo": memo
 }
 
 with sr.Microphone() as source:
@@ -101,9 +101,9 @@ with sr.Microphone() as source:
                 #output = gTTS(text="Hello to you too!", lang = "en", slow = False)
                 speak.Speak("Hello World")
 
-            if("commands" in recognizedAudio):
+            if("list" in recognizedAudio):
                 for command in commands["commands"]:
-                    print(command)
+                    print("  > " + command)
 
             if("open program" in recognizedAudio):
                 commands["Open Program"](speak, programs)
