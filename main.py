@@ -2,11 +2,12 @@ from email.mime import audio
 from tracemalloc import stop
 from gtts import gTTS
 from datetime import datetime 
+from pathlib import Path
 import speech_recognition as sr
 import win32com.client as wincl
 import os 
 import subprocess
-from pathlib import Path
+import getpass
 #import time
 
 def openProgram(speak, programs):
@@ -53,6 +54,8 @@ def dateAndTime(speak):
         day += "nd"
     elif(int(day) % 10 == 3):
         day += "rd"
+    else:
+        day += "th"
 
     monthAndYear = now.strftime("%B %Y")
 
@@ -89,11 +92,11 @@ def createMemo(speak):
     #speak("You said: " + str(ans))     #Puca -_-
 
     if os.path.exists("./memos/" + ans + ".txt"):
-        print("A file with this name already exists. Do you want to repeat your input? (yes/no)")
-        speak.Speak("A file with this name already exists. Do you want to repeat your input?")
-    else:
-        print("Do you want to repeat your input? (yes/no)")
-        speak.Speak("Do you want to repeat your input?")
+        print("A file with this name already exists.") #Do you want to repeat your input? (yes/no)")
+        speak.Speak("A file with this name already exists.")# Do you want to repeat your input?")
+    #else:
+    print("Do you want to repeat your input? (yes/no)")
+    speak.Speak("Do you want to repeat your input?")
 
     audio = r.listen(source)
     confirmation = str.lower(r.recognize_google(audio))
@@ -108,11 +111,11 @@ def createMemo(speak):
         print("You said: " + ans)
 
         if os.path.exists("./memos/" + ans + ".txt"):
-            print("A file with this name already exists. Do you want to repeat your input? (yes/no)")
-            speak.Speak("A file with this name already exists. Do you want to repeat your input?")
-        else:
-            print("Do you want to repeat your input? (yes/no)")
-            speak.Speak("Do you want to repeat your input?")
+            print("A file with this name already exists.") #Do you want to repeat your input? (yes/no)")
+            speak.Speak("A file with this name already exists.")# Do you want to repeat your input?")
+        #else:
+        print("Do you want to repeat your input? (yes/no)")
+        speak.Speak("Do you want to repeat your input?")
 
         audio = r.listen(source)
         confirmation = str.lower(r.recognize_google(audio))
@@ -134,6 +137,33 @@ def createMemo(speak):
     print("Done. The file is in the memos folder.")
     speak.Speak("Done. The file is in the memos folder.")
 
+def getWeatherForecast(speak):
+    print("Which city are you interested in?")
+    speak.Speak("Which city are you interested in?")
+
+    audio = r.listen(source)
+    ans = str.lower(r.recognize_google(audio))
+   
+    print("You said: " + ans)
+
+    query = "https://www.google.com/search?q=weather+" + ans 
+
+    subprocess.Popen(["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", query])
+
+
+def googleSomething(speak):
+    print("What would you like to Google?")
+    speak.Speak("What would you like to Google?")
+
+    audio = r.listen(source)
+    ans = str.lower(r.recognize_google(audio))
+   
+    print("You said: " + ans)
+
+    query = "https://www.google.com/search?q=" + ans 
+
+    subprocess.Popen(["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", query])
+
 ######MAIN###########
 r = sr.Recognizer()
 speak = wincl.Dispatch("SAPI.SpVoice")
@@ -141,20 +171,26 @@ speak = wincl.Dispatch("SAPI.SpVoice")
 programs = {
     "chrome": ('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', '-new-tab'),
     "firefox": ('C:\\Program Files\\Mozilla Firefox\\firefox.exe', '-new-tab'),
-    "notepad": 'C:\\Windows\\System32\\notepad.exe'
+    "notepad": 'C:\\Windows\\System32\\notepad.exe',
+    "teams": 'C:\\Users\\' + getpass.getuser() + '\\AppData\\Local\\Microsoft\\Teams\\current\\teams.exe'
 }
 
-commandList = ["Show Commands", "Open Program", "Create Memo", "Google", "Date and Time"]
+commandList = ["Show Commands", "Open Program", "Close Program", "Create Memo", "Google", "Weather Forecast", "Date and Time"]
 
 commands = {
     "Open Program": openProgram,
-    "Date and Time": dateAndTime,
     "Close Program": closeProgram,
-    "Create Memo": createMemo
+    "Date and Time": dateAndTime,
+    "Create Memo": createMemo,
+    "Google": googleSomething,
+    "Weather Forecast": getWeatherForecast
 }
 
 with sr.Microphone() as source:
     r.adjust_for_ambient_noise(source)
+
+
+    print()
 
     print("Say something")
 
@@ -162,9 +198,9 @@ with sr.Microphone() as source:
 
     recognizedAudio = str.lower(r.recognize_google(audio))
 
-    while("stop" not in recognizedAudio):
+    try:
+        while("stop" not in recognizedAudio):
 
-        try:
             print("You said: " + recognizedAudio)
 
             if("hello" in recognizedAudio):
@@ -188,14 +224,21 @@ with sr.Microphone() as source:
 
             if("memo" in recognizedAudio):
                 commands["Create Memo"](speak)
-                
+            
+            if("weather" in recognizedAudio or "forecast" in recognizedAudio):
+                commands["Weather Forecast"](speak)
 
-        except Exception as e:
-            print("Error: " + e)
+            if("google" in recognizedAudio):
+                commands["Google"](speak)
+            
+            print("Say something")
 
-        print("Say something")
+            audio = r.listen(source)
 
-        audio = r.listen(source)
+            recognizedAudio = str.lower(r.recognize_google(audio))   
 
-        recognizedAudio = r.recognize_google(audio)
+    except Exception as e:
+        print("Error: " + e)
+
+        
 
