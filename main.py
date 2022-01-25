@@ -1,7 +1,5 @@
 from email.mime import audio
 from random import randint
-#from tracemalloc import stop
-#from gtts import gTTS
 from datetime import datetime 
 from pathlib import Path
 import speech_recognition as sr
